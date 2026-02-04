@@ -1,7 +1,8 @@
 using System.IO;
 using System.Windows;
-using System.Windows.Input;
+using System.Windows.Controls;
 using ToDoList_WPF_AutoTests.Core;
+using ToDoList_WPF_AutoTests.Core.Models;
 using ToDoList_WPF_AutoTests.UI.ViewModels;
 
 namespace ToDoList_WPF_AutoTests.UI;
@@ -19,13 +20,22 @@ public partial class MainWindow : Window
         DataContext = new MainViewModel(repository);
     }
 
-    private void NewItemTextBox_KeyDown(object sender, KeyEventArgs e)
+    private void AddButton_Click(object sender, RoutedEventArgs e)
     {
-        if (e.Key == Key.Enter && DataContext is MainViewModel vm)
+        var dialog = new AddItemWindow { Owner = this };
+        if (dialog.ShowDialog() != true || DataContext is not MainViewModel vm)
+            return;
+
+        var item = new TodoItem
         {
-            if (vm.AddCommand.CanExecute(null))
-                vm.AddCommand.Execute(null);
-            e.Handled = true;
-        }
+            Id = Guid.NewGuid(),
+            Title = dialog.ItemTitle,
+            Description = dialog.ItemDescription,
+            Deadline = dialog.ItemDeadline,
+            IsCompleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        vm.AddItem(item);
     }
+
 }

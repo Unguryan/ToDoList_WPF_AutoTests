@@ -1,5 +1,4 @@
 using ToDoList_WPF_AutoTests.Core.Models;
-using ToDoList_WPF_AutoTests.UI.ViewModels;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NSubstitute;
 using ToDoList_WPF_AutoTests.Core;
@@ -29,40 +28,33 @@ public class MainViewModelTests
     }
 
     [TestMethod]
-    public void Add_AddsItemToCollection()
+    public void AddItem_AddsToCollection()
     {
         var items = new List<TodoItem>();
         var repo = CreateRepo(items);
-        var vm = new MainViewModel(repo);
-        vm.NewItemTitle = "New task";
-        vm.AddCommand.Execute(null);
+        var vm = new TestableMainViewModel(repo);
+        var item = new TodoItem
+        {
+            Id = Guid.NewGuid(),
+            Title = "New task",
+            IsCompleted = false,
+            CreatedAt = DateTime.UtcNow
+        };
+        vm.AddItem(item);
         Assert.AreEqual(1, vm.Items.Count);
         Assert.AreEqual("New task", vm.Items[0].Title);
         Assert.IsFalse(vm.Items[0].IsCompleted);
     }
 
     [TestMethod]
-    public void Add_ClearsNewItemTitle()
+    public void Remove_RemovesSelectedItems()
     {
         var items = new List<TodoItem>();
         var repo = CreateRepo(items);
-        var vm = new MainViewModel(repo);
-        vm.NewItemTitle = "Task";
-        vm.AddCommand.Execute(null);
-        Assert.AreEqual(string.Empty, vm.NewItemTitle);
-    }
-
-    [TestMethod]
-    public void Remove_RemovesSelectedItem()
-    {
-        var items = new List<TodoItem>();
-        var repo = CreateRepo(items);
-        var vm = new MainViewModel(repo);
-        vm.NewItemTitle = "One";
-        vm.AddCommand.Execute(null);
-        vm.NewItemTitle = "Two";
-        vm.AddCommand.Execute(null);
-        vm.SelectedItem = vm.Items[0];
+        var vm = new TestableMainViewModel(repo);
+        vm.AddItem(new TodoItem { Id = Guid.NewGuid(), Title = "One", CreatedAt = DateTime.UtcNow });
+        vm.AddItem(new TodoItem { Id = Guid.NewGuid(), Title = "Two", CreatedAt = DateTime.UtcNow });
+        vm.SyncSelectedItems(new[] { vm.Items[0] });
         vm.RemoveCommand.Execute(null);
         Assert.AreEqual(1, vm.Items.Count);
         Assert.AreEqual("Two", vm.Items[0].Title);
@@ -73,11 +65,10 @@ public class MainViewModelTests
     {
         var items = new List<TodoItem>();
         var repo = CreateRepo(items);
-        var vm = new MainViewModel(repo);
-        vm.NewItemTitle = "Task";
-        vm.AddCommand.Execute(null);
+        var vm = new TestableMainViewModel(repo);
+        vm.AddItem(new TodoItem { Id = Guid.NewGuid(), Title = "Task", CreatedAt = DateTime.UtcNow });
         var item = vm.Items[0];
-        vm.SelectedItem = item;
+        vm.SyncSelectedItems(new[] { item });
         Assert.IsFalse(item.IsCompleted);
         vm.ToggleCompleteCommand.Execute(null);
         Assert.IsTrue(item.IsCompleted);
@@ -99,7 +90,7 @@ public class MainViewModelTests
             }
         };
         var repo = CreateRepo(items);
-        var vm = new MainViewModel(repo);
+        var vm = new TestableMainViewModel(repo);
         Assert.AreEqual(1, vm.Items.Count);
         Assert.AreEqual("Existing", vm.Items[0].Title);
     }

@@ -4,46 +4,58 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ToDoList_WPF_AutoTests.UI"
+        xmlns:converters="clr-namespace:ToDoList_WPF_AutoTests.UI.Converters"
         xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
         mc:Ignorable="d"
         Title="To-Do List" Height="450" Width="800">
+    <Window.Resources>
+        <converters:DeadlineDisplayConverter x:Key="DeadlineDisplayConverter"/>
+    </Window.Resources>
     <Grid Margin="10">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBox Grid.Row="0" x:Name="NewItemTextBox"
-                 automation:AutomationProperties.AutomationId="NewItemTextBox"
-                 automation:AutomationProperties.Name="NewItemTextBox"
-                 Text="{Binding NewItemTitle, UpdateSourceTrigger=PropertyChanged}"
-                 Padding="8,6" Margin="0,0,0,8"
-                 KeyDown="NewItemTextBox_KeyDown"/>
-
-        <Button Grid.Row="1" x:Name="AddButton"
+        <Button Grid.Row="0" x:Name="AddButton"
                 automation:AutomationProperties.AutomationId="AddButton"
                 automation:AutomationProperties.Name="AddButton"
                 Content="Add"
-                Command="{Binding AddCommand}"
-                Padding="16,6" Margin="0,0,0,8" HorizontalAlignment="Left"/>
+                Padding="16,6" Margin="0,0,0,8" HorizontalAlignment="Left"
+                Click="AddButton_Click"/>
 
-        <ListBox Grid.Row="2" x:Name="TodoList"
+        <ListBox Grid.Row="1" x:Name="TodoList"
                  automation:AutomationProperties.AutomationId="TodoList"
                  automation:AutomationProperties.Name="TodoList"
                  ItemsSource="{Binding Items}"
-                 SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
-                 DisplayMemberPath="Title"
+                 SelectionMode="Single"
                  Margin="0,0,0,8">
             <ListBox.ItemContainerStyle>
                 <Style TargetType="ListBoxItem">
                     <Setter Property="automation:AutomationProperties.Name" Value="{Binding Title}" />
+                    <Setter Property="ToolTip" Value="{Binding Description}"/>
                 </Style>
             </ListBox.ItemContainerStyle>
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                  automation:AutomationProperties.Name="{Binding Title, StringFormat=Select {0}}"
+                                  Margin="0,0,8,0" VerticalAlignment="Center">
+                            <CheckBox.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                    <TextBlock Text="{Binding Deadline, Converter={StaticResource DeadlineDisplayConverter}}" Foreground="Gray" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                                </StackPanel>
+                            </CheckBox.Content>
+                        </CheckBox>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
         </ListBox>
 
-        <StackPanel Grid.Row="3" Orientation="Horizontal">
+        <StackPanel Grid.Row="2" Orientation="Horizontal">
             <Button x:Name="RemoveButton"
                     automation:AutomationProperties.AutomationId="RemoveButton"
                     automation:AutomationProperties.Name="RemoveButton"
